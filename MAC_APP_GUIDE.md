@@ -1,6 +1,6 @@
-# MIR Cleanup for Mac — version 1.2.2
+# MIR Cleanup for Mac — version 1.2.3
 
-Open **MIR Cleanup 1.2.2.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
+Open **MIR Cleanup 1.2.3.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
 
 ## Start and review
 
