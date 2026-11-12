@@ -227,7 +227,7 @@ class Window(W.QMainWindow):
         box.exec()
     def run(self,fn,done=None):
         if self.worker:return
-        self.centralWidget().setEnabled(False);self.busy_label.setText('Working…');W.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        self.centralWidget().setEnabled(False);self.busy_label.setText('Working…')
         self.worker=Worker(fn)
         self._completed_callback=done
         self.worker.done.connect(self.work_done);self.worker.failed.connect(self.error)
@@ -237,7 +237,7 @@ class Window(W.QMainWindow):
         if self._completed_callback:self._completed_callback(result)
     @QtCore.Slot()
     def work_finished(self):
-        self.worker.wait();self.worker.deleteLater();self.worker=None;self.centralWidget().setEnabled(True);self.busy_label.setText('');W.QApplication.restoreOverrideCursor();self.refresh()
+        self.worker.wait();self.worker.deleteLater();self.worker=None;self.centralWidget().setEnabled(True);self.busy_label.setText('');self.refresh()
     def guard(self,fn):
         if not self.session:return
         try:fn()
