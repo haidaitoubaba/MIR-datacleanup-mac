@@ -1,6 +1,7 @@
 """Mac/Windows desktop interface for staged MIR cleanup."""
 from __future__ import annotations
 import copy
+from contextlib import contextmanager
 import sys
 import traceback
 from datetime import datetime
@@ -63,6 +64,15 @@ class PlotToolbar(NavigationToolbar2QT):
         self.zoom_button.setMenu(menu)
         self.zoom_button.setPopupMode(W.QToolButton.MenuButtonPopup)
         self.update_zoom_label()
+
+    @contextmanager
+    def _wait_cursor_for_draw_cm(self):
+        # Avoid Qt's unstable wait cursor during macOS canvas redraws.
+        if sys.platform == 'darwin':
+            yield
+        else:
+            with super()._wait_cursor_for_draw_cm():
+                yield
 
     def update_zoom_label(self):
         action = self._actions['zoom']
