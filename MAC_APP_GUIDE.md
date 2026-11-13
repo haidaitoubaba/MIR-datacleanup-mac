@@ -1,6 +1,12 @@
-# MIR Cleanup for Mac — version 1.2.3
+# MIR Cleanup for Mac — version 1.3.0
 
-Open **MIR Cleanup 1.2.3.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
+Open **MIR Cleanup 1.3.0.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
+
+## Automatic cleanup
+
+With a session open, click **Auto clean all properties** and confirm the batch. The app creates a separate session copy, retains existing PCA exclusions, and processes only properties without previous A/B reviews. It finishes PCA review and the split, computes A, excludes candidate samples (all their replicate spectra), finishes A, and then computes and reviews B in the same way. Each half is calculated once. The existing concentration limit is enforced.
+
+The progress dialog can request a stop after the current property. The result summary lists completed, skipped and failed properties; use **Show Details** to inspect it. Only when every property meets the existing review and source-workbook requirements does the app report that export is ready. Use **Export cleaned dataset** to create the output. A failure restores that property in the copy and continues; the original session remains unchanged. An interrupted property is restored when its copied session is reopened. Automatic decisions and the originating candidate filenames are recorded in the session and exported review.
 
 ## Start and review
 
@@ -25,7 +31,7 @@ Open **MIR Cleanup 1.2.3.app** if you have a packaged build. This release is for
 
 ## Decisions, settings and saved sessions
 
-- All candidates remain until explicitly confirmed. Red marks mean confirmed exclusions; orange calibration points are numerical candidates.
+- In manual review, candidates remain until explicitly confirmed. Automatic cleanup applies candidate exclusions after the batch confirmation. Red marks mean confirmed exclusions; orange calibration points are numerical candidates.
 - The limit defaults to **disabled**, with 1% entered as the initial percentage. Edit the controls and click **Save limit**. An enabled limit counts unique concentration-excluded samples per property across both halves, against the original input sample count.
 - When opening a session with an older independently optimized B result, the app archives that result and asks you to calculate B again under the new settings rule. Existing exclusion decisions remain saved, but B must be reviewed and finished again.
 - Every confirmed action saves `session.json`. Use **Open session** to resume. Keep the entire session folder, including its `.npz` files, together.
