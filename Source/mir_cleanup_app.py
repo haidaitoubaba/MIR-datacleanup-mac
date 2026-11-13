@@ -1,6 +1,7 @@
 """Mac/Windows desktop interface for staged MIR cleanup."""
 from __future__ import annotations
 import copy
+import threading
 from contextlib import contextmanager
 import sys
 import traceback
@@ -11,6 +12,7 @@ from matplotlib.figure import Figure
 from matplotlib.widgets import RectangleSelector, LassoSelector
 from matplotlib.path import Path as PlotPath
 import mir_cleanup_session as engine
+import mir_cleanup_auto as auto
 import soil_mir_data_cleanup as core
 from PySide6 import QtCore, QtGui, QtWidgets as W
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
@@ -110,6 +112,13 @@ class Worker(QtCore.QThread):
         except Exception as exc:self.failed.emit(str(exc)+'\n\n'+traceback.format_exc())
 
 
+class AutoWorker(Worker):
+    progress = QtCore.Signal(int, int, str, str)
+    def __init__(self, session):
+        self.stop_requested = threading.Event()
+        super().__init__(lambda: auto.run(session, self.progress.emit, self.stop_requested.is_set))
+
+
 class Setup(W.QDialog):
     def __init__(self,parent=None):
         super().__init__(parent);self.setWindowTitle('New cleanup session');self.resize(680,500)
@@ -192,6 +201,7 @@ class Window(W.QMainWindow):
             controls.setColumnStretch(col*2+1,1)
         self.info=W.QLabel('Start a new session or open an existing saved session.');self.info.setWordWrap(True);layout.addWidget(self.info)
         actions=W.QHBoxLayout();layout.addLayout(actions)
+        self.button(actions,'Auto clean all properties',self.auto_clean)
         self.calc=self.button(actions,'Refit PCA',self.calculate)
         self.finish=self.button(actions,'Finish PCA review',self.finish_review)
         self.button(actions,'Undo decision',self.undo)
@@ -248,6 +258,46 @@ class Window(W.QMainWindow):
     @QtCore.Slot()
     def work_finished(self):
         self.worker.wait();self.worker.deleteLater();self.worker=None;self.centralWidget().setEnabled(True);self.busy_label.setText('');self.refresh()
+        if getattr(self,'auto_progress',None):
+            self.auto_progress.close();self.auto_progress=None
+
+    def auto_clean(self):
+        if not self.session or self.worker:return
+        props=self.session.state['properties']; eligible=sum(not auto.already_reviewed(p) for p in props.values())
+        message=(f'Create a separate session copy and automatically clean {eligible} of {len(props)} properties?\n\n'
+                 f'{len(props)-eligible} properties with existing A/B review will be skipped. '
+                 'PCA exclusions are preserved. Candidates are excluded as whole samples; A and B are processed once. '
+                 'The current concentration limit applies.')
+        if W.QMessageBox.question(self,'Automatic cleanup',message)!=W.QMessageBox.Yes:return
+        self.centralWidget().setEnabled(False);self.busy_label.setText('Working…')
+        self.auto_progress=W.QProgressDialog('Creating session copy…','Stop after current property',0,len(props),self)
+        self.auto_progress.setWindowTitle('Automatic cleanup');self.auto_progress.setMinimumDuration(0)
+        self.auto_progress.setAutoClose(False);self.auto_progress.setAutoReset(False)
+        self.worker=AutoWorker(self.session);self._completed_callback=self.auto_completed
+        self.auto_progress.canceled.connect(self.worker.stop_requested.set)
+        self.worker.progress.connect(self.auto_update)
+        self.worker.done.connect(self.work_done);self.worker.failed.connect(self.error)
+        self.worker.finished.connect(self.work_finished);self.auto_progress.show();self.worker.start()
+
+    @QtCore.Slot(int,int,str,str)
+    def auto_update(self,index,total,prop,stage):
+        if self.auto_progress:
+            self.auto_progress.setMaximum(total);self.auto_progress.setValue(index-1)
+            self.auto_progress.setLabelText(f'{index}/{total}: {prop} — {stage}')
+
+    def auto_completed(self,session):
+        self.bind(session)
+        report=session.state['auto_cleanup']; results=report['results']
+        lines=[]
+        for r in results:
+            line=f"{r['property']}: {r['status']}" + (f" — {r['error']}" if r.get('error') else '')
+            for half,counts in r.get('counts',{}).items():
+                line+=f"\n  {half}: {counts['candidate_spectra']} candidate spectra; {counts['samples']} samples; {counts['excluded_spectra']} excluded spectra"
+            lines.append(line)
+        issues=auto.readiness(session)
+        title='Ready to export' if not issues and not report['stopped'] else 'Further review needed'
+        detail='\n'.join(lines + (['','Not ready:']+issues if issues else []) + (['','Stopped by user.'] if report['stopped'] else []))
+        box=W.QMessageBox(self);box.setWindowTitle(title);box.setText(title+'\nSession copy: '+str(session.folder));box.setDetailedText(detail);box.exec()
     def guard(self,fn):
         if not self.session:return
         try:fn()
