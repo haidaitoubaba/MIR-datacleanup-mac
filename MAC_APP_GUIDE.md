@@ -1,23 +1,27 @@
-# MIR Cleanup for Mac — version 1.3.0
+# MIR Cleanup for Mac — version 1.4.0
 
-Open **MIR Cleanup 1.3.0.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
+Open **MIR Cleanup 1.4.0.app** if you have a packaged build. This release is for Apple Silicon Macs (arm64). Keep the app bundle intact; it includes Python and its dependencies. You can copy the app to another folder on your Mac. This build targets the architecture of the development Mac; Windows packaging is not included.
+
+## Workbench and appearance
+
+Choose **Light**, **Night** or **System** from **Appearance**. System follows macOS and the app remembers your choice. The property list is on the left, review stages and plots are in the center, and the **Selection** panel shows affected samples and spectra. Expand **Model details** for model diagnostics. **Session**, **Plot tools** and **Review tools** group related commands.
 
 ## Automatic cleanup
 
-With a session open, click **Auto clean all properties** and confirm the batch. The app creates a separate session copy, retains existing PCA exclusions, and processes only properties without previous A/B reviews. It finishes PCA review and the split, computes A, excludes candidate samples (all their replicate spectra), finishes A, and then computes and reviews B in the same way. Each half is calculated once. The existing concentration limit is enforced.
+With a session open, click **Auto clean eligible properties…** and confirm the batch. The app creates a separate session copy, retains existing PCA exclusions, and processes only properties without previous A/B reviews. It finishes PCA review and the split, computes A, excludes candidate samples (all their replicate spectra), finishes A, and then computes and reviews B in the same way. Each half is calculated once. The existing concentration limit is enforced.
 
-The progress dialog can request a stop after the current property. The result summary lists completed, skipped and failed properties; use **Show Details** to inspect it. Only when every property meets the existing review and source-workbook requirements does the app report that export is ready. Use **Export cleaned dataset** to create the output. A failure restores that property in the copy and continues; the original session remains unchanged. An interrupted property is restored when its copied session is reopened. Automatic decisions and the originating candidate filenames are recorded in the session and exported review.
+The progress dialog can request a stop after the current property. The result summary lists completed, skipped and failed properties; use **Cleanup results** to inspect it again. Only when every property meets the existing review and source-workbook requirements does the app report that export is ready. Use **Export cleaned dataset** to create the output. A failure restores that property in the copy and continues; the original session remains unchanged. An interrupted property is restored when its copied session is reopened. Automatic decisions and the originating candidate filenames are recorded in the session and exported review.
 
 ## Start and review
 
-1. Click **New session**. Choose your original reference workbook, OPUS spectra folder, and a parent folder for saved sessions.
-2. Use **Browse** to select the input file/folders; macOS may ask for access to the selected location. Click **Read properties from workbook**, select the properties, then click **OK**. The app creates a dated session folder. Invalid input records must be corrected in the source workflow before starting; the app does not repair them.
+1. Click **New session** on the welcome screen or in the **Session** menu. Choose your original reference workbook, OPUS spectra folder, and a parent folder for saved sessions.
+2. Use **Browse** to select the input file/folders; macOS may ask for access to the selected location. Click **Read properties from workbook**, select the properties, then click **Create session**. The app creates a dated session folder. Invalid input records must be corrected in the source workflow before starting; the app does not repair them.
 3. Review **PCA**. Change X/Y components, colour and visible records. Click points or select table rows; rectangle and lasso modes are also available. Selection alone does not remove data.
-4. Optionally choose a reason, choose the spectrum/sample unit, then click **Confirm exclusion**. Check the expanded filenames in the confirmation dialog. Exclusions belong to the selected property only.
+4. Optionally choose a reason, choose the spectrum/sample unit, then click **Review exclusion…**. Check the expanded filenames in the confirmation dialog. Exclusions belong to the selected property only.
 5. Click **Refit PCA** after PCA exclusions. The updated fit changes coordinates and explained variance. Up to three PCA fits are available per session. **Finish PCA review / split** creates A/B assignments only after the current fit is reviewed. With no exclusions, proceed directly.
-6. In stage **A**, click **Calculate half A**. The app selects preprocessing/rank against B, then displays A's calibration fit at rank 15 where feasible. Inspect the plotted values and residual table. Confirm exclusions with **Unit: spectrum** for one record or **Unit: sample** for all its replicates, then **Finish A review**.
+6. In stage **A**, click **Calculate Half A**. The app selects preprocessing/rank against B, then displays A's calibration fit at rank 15 where feasible. Inspect the plotted values and residual table. Confirm exclusions with **Unit: spectrum** for one record or **Unit: sample** for all its replicates, then **Finish Half A review**.
 7. Calculate and review **B**. B reuses exactly A’s selected preprocessing and selection rank. The preprocessing is fitted on B (including its own MSC reference when applicable), and its prediction error is evaluated on retained A without a new optimization search. Exclusion diagnostics use rank 15 where feasible, just as for A. If B cannot support A’s selected rank, calculation stops with an explanation. Finish B review.
-8. Repeat for other selected properties, then **Export cleaned dataset**. The app creates a new dated export folder containing `reference_cleaned.xlsx`, its `.cleanup.json` provenance, audit, Excel review, offline PCA viewer and reports. In the cleaned workbook, the original property sheet names contain the retained records.
+8. Repeat for other selected properties, then open **Export overview** and click **Export cleaned dataset**. The app creates a new dated export folder containing `reference_cleaned.xlsx`, its `.cleanup.json` provenance, audit, Excel review, offline PCA viewer and reports. In the cleaned workbook, the original property sheet names contain the retained records.
 
 ## Plot and data controls
 
@@ -26,18 +30,18 @@ The progress dialog can request a stop after the current property. The result su
 - Click a selected point again to deselect it. **Clear selection** is available in both tabs. Escape while the plot has keyboard focus, or clicking empty plot space in Click points mode, also clears selection.
 - Use the small arrow beside the **magnifier** to choose **Zoom in — drag rectangle** or **Zoom out — drag rectangle**. Then drag with the left mouse button or trackpad on the plot. The main magnifier button toggles zoom mode; its tooltip shows the selected direction. Home resets the view and Back returns to the previous zoom. Zoom mode temporarily pauses point-selection tools.
 - Rectangle and lasso selections toggle the points enclosed: new points are added, previously selected points are removed, and other selected points remain. Selection changes preserve zoom.
-- Status and treatment colours have legends; Reference value colouring has a labelled colour bar. Selected points have black outlines.
+- Status and treatment colours have legends; Reference value colouring has a labelled colour bar. Selected points have contrasting outlines in both Light and Night modes.
 - Reasons and comments are optional. Calibration A/B exclusions can use spectrum or sample units. An enabled concentration limit counts unique affected samples, including partial-replicate exclusions and blank reasons.
 
 ## Decisions, settings and saved sessions
 
 - In manual review, candidates remain until explicitly confirmed. Automatic cleanup applies candidate exclusions after the batch confirmation. Red marks mean confirmed exclusions; orange calibration points are numerical candidates.
-- The limit defaults to **disabled**, with 1% entered as the initial percentage. Edit the controls and click **Save limit**. An enabled limit counts unique concentration-excluded samples per property across both halves, against the original input sample count.
+- Open **Concentration limit…** from **Review tools**. The limit defaults to **disabled**, with 1% entered as the initial percentage. Edit the controls and click **Save limit**. An enabled limit counts unique concentration-excluded samples per property across both halves, against the original input sample count.
 - When opening a session with an older independently optimized B result, the app archives that result and asks you to calculate B again under the new settings rule. Existing exclusion decisions remain saved, but B must be reviewed and finished again.
 - Every confirmed action saves `session.json`. Use **Open session** to resume. Keep the entire session folder, including its `.npz` files, together.
 - **Undo decision** restores the previous in-memory action snapshot, including the dependent state. Undo history itself does not persist across app restarts; saved audit history does.
 - Changing PCA decisions invalidates the split and both calibration results. Changing A decisions invalidates B and clears B confirmations for renewed review. Older results remain in the saved archive.
-- Marking calibration exclusions does not refit the calibration model. This version 1.2 intentionally displays the original diagnostic fit for that half.
+- Marking calibration exclusions does not refit the calibration model. The app displays the original diagnostic fit for that half.
 - **Open offline PCA** shows the current basis with original/retained visibility and explained variance. Earlier PCA removals are not projected into a later refitted basis. Each PCA fit also has a separate HTML snapshot in the session folder.
 - Excel export/import is optional. Edit only Confirm, Reason, Unit and Comment. Import one dependent review stage at a time. Blank/NO restores a previous decision; contradictory whole-sample YES and explicit NO are rejected.
 - **Locate original workbook** allows relocating the original source, verified by its fingerprint. Prepared spectra are included in the session, so resuming does not require the original spectra folder. A new session does require spectra.
@@ -60,7 +64,7 @@ To replace an earlier incorrect export, open the saved session, finish any outst
 
 ## Interpretation and boundaries
 
-The plot defaults to the modelled scale. Select **Original units** to view back-transformed fitted values. Metadata controls transformations; reference-sheet values remain untransformed. Selection rank and diagnostic rank have different roles. If rank 15 is unsupported, the actual rank and explanation appear above the plot.
+The plot defaults to the modelled scale. Select **Original units** to view back-transformed fitted values. Metadata controls transformations; reference-sheet values remain untransformed. Selection rank and diagnostic rank have different roles. If rank 15 is unsupported, the actual rank and explanation appear in **Model details**.
 
 The candidate statistic is a Python approximation, `|studentised residual| > 2.5`, with leverage reported separately. It is not OPUS F Value/F Prob. Raw-spectrum overlays, iterative same-half calibration refits and final LOGO/Monte Carlo model execution are outside this release.
 

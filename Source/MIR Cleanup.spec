@@ -12,8 +12,8 @@ pyz = PYZ(a.pure)
 exe = EXE(pyz,a.scripts,[],exclude_binaries=True,name='MIR Cleanup',debug=False,bootloader_ignore_signals=False,
           strip=False,upx=False,console=False,argv_emulation=False,target_arch=None,codesign_identity=None,entitlements_file=None)
 coll = COLLECT(exe,a.binaries,a.datas,strip=False,upx=False,name='MIR Cleanup')
-app = BUNDLE(coll,name='MIR Cleanup.app',icon=None,bundle_identifier='org.soilmir.cleanup',
-             info_plist={'CFBundleShortVersionString':'1.3.0','NSHighResolutionCapable':True,
+app = BUNDLE(coll,name='MIR Cleanup.app',icon=str(root/'MIR Cleanup.icns'),bundle_identifier='org.soilmir.cleanup',
+             info_plist={'CFBundleShortVersionString':'1.4.0','CFBundleVersion':'1.4.0','NSHighResolutionCapable':True,
                 'NSDownloadsFolderUsageDescription':'Read the reference workbook and MIR spectra you select for cleanup.',
                 'NSDocumentsFolderUsageDescription':'Read selected inputs and save your cleanup sessions and reports.',
                 'NSDesktopFolderUsageDescription':'Read selected inputs and save cleanup outputs when you choose Desktop.'})
